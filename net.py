@@ -1,7 +1,7 @@
 import torch.nn.functional as F
 from torch import nn
 import torch
-
+import tqdm
 
 class OurNet(nn.Module):
 
@@ -42,3 +42,23 @@ class OurNet(nn.Module):
         x = self.dense_3(x)
         x = self.log_softmax(x)
         return x
+
+
+    def train(self, X, y, device, batch_size = 256, epochs = 100):
+
+        loss = nn.NLLLoss()
+        optimizer = torch.optim.Adam(self.parameters(),lr=0.001)
+        losses_all = []
+        losses_epochs = []
+        for _ in tqdm.tqdm(range(epochs)):
+            for idx in range(0,len(y) - batch_size,batch_size):
+                optimizer.zero_grad()
+                temp_X, temp_y = X[idx:idx+batch_size].to(device), y[idx:idx+batch_size].to(device)
+                res = self.forward(temp_X)
+                output = loss(res, temp_y.long())
+                output.backward()
+                optimizer.step()
+                losses_all.append(output.item())
+            losses_epochs.append(output.item())
+
+        return
