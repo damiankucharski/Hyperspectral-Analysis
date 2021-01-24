@@ -36,4 +36,17 @@ def create_dataset(X, y, window_size = 5):
     y = torch.flatten(y)
     assert len(y) == len(windows)
     return windows, y
-    
+
+def applyPCA(X, numComponents=75):
+    newX = np.reshape(X, (-1, X.shape[2]))
+    pca = PCA(n_components=numComponents, whiten=True)
+    newX = pca.fit_transform(newX)
+    newX = np.reshape(newX, (X.shape[0],X.shape[1], numComponents))
+    return newX, pca
+
+def scaler(X):
+    m = X.mean(0, keepdim=True)
+    s = X.std(0, unbiased=False, keepdim=True)
+    X -= m
+    X /= s
+    return X
