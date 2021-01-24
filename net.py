@@ -62,3 +62,19 @@ class OurNet(nn.Module):
             losses_epochs.append(output.item())
 
         return
+        
+    def score(net,X_test,y_test,device):
+        net.eval()
+        net = net.to(device)
+        scores = []
+        device_cpu = torch.device('cpu')
+        with torch.no_grad():
+            for idx in tqdm.tqdm(range(0,len(y_test) - batch_size,batch_size)):
+                temp_X, temp_y = X_test[idx:idx+batch_size].to(device), y_test[idx:idx+batch_size].to(device)
+                res = net(temp_X)
+                scores.append(torch.argmax(torch.exp(res.to(device_cpu)),axis=1))
+        accuracy_scores = []
+        for idx in tqdm.tqdm(range(0,len(y_test) - batch_size,batch_size)):
+            accuracy_scores.append(accuracy_score(y_test[idx:idx+batch_size],scores[int(idx/batch_size)]))
+        return sum(accuracy_scores)/len(accuracy_scores)
+
