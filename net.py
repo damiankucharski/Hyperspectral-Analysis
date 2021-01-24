@@ -46,7 +46,7 @@ class OurNet(nn.Module):
         return x
 
 
-    def train(self, X, y, device, batch_size = 256, epochs = 100, validation_data = [], callbacks = []):
+    def train_model(self, X, y, device, batch_size = 256, epochs = 100, validation_data = [], callbacks = []):
 
         loss = nn.NLLLoss()
         optimizer = torch.optim.Adam(self.parameters(),lr=0.001)
