@@ -2,6 +2,8 @@ import torch.nn.functional as F
 from torch import nn
 import torch
 import tqdm
+from sklearn.metrics import accuracy_score
+
 
 class OurNet(nn.Module):
 
@@ -44,12 +46,15 @@ class OurNet(nn.Module):
         return x
 
 
-    def train(self, X, y, device, batch_size = 256, epochs = 100):
+    def train(self, X, y, device, batch_size = 256, epochs = 100, validation_data = [], callbacks = []):
 
         loss = nn.NLLLoss()
         optimizer = torch.optim.Adam(self.parameters(),lr=0.001)
-        losses_all = []
         losses_epochs = []
+        scores = []
+        if validation_data:
+            scores_val = []
+
         for _ in tqdm.tqdm(range(epochs)):
             for idx in range(0,len(y) - batch_size,batch_size):
                 optimizer.zero_grad()
@@ -58,23 +63,31 @@ class OurNet(nn.Module):
                 output = loss(res, temp_y.long())
                 output.backward()
                 optimizer.step()
-                losses_all.append(output.item())
             losses_epochs.append(output.item())
-
-        return
         
-    def score(net,X_test,y_test,device):
-        net.eval()
-        net = net.to(device)
+            scores.append(self.score(X,y,device, batch_size))
+            if validation_data:
+                scores_val.append(self.score(validation_data[0], validation_data[1], device, batch_size))
+
+
+        if validation_data:
+            return losses_epochs, scores, scores_val
+        else:
+            return losses_epochs, scores
+        
+    def score(self, X_test , y_test, device, batch_size = 256):
+        self.train(False)
         scores = []
         device_cpu = torch.device('cpu')
         with torch.no_grad():
             for idx in tqdm.tqdm(range(0,len(y_test) - batch_size,batch_size)):
                 temp_X, temp_y = X_test[idx:idx+batch_size].to(device), y_test[idx:idx+batch_size].to(device)
-                res = net(temp_X)
+                res = self(temp_X)
                 scores.append(torch.argmax(torch.exp(res.to(device_cpu)),axis=1))
         accuracy_scores = []
         for idx in tqdm.tqdm(range(0,len(y_test) - batch_size,batch_size)):
             accuracy_scores.append(accuracy_score(y_test[idx:idx+batch_size],scores[int(idx/batch_size)]))
+
+        self.train(True)
         return sum(accuracy_scores)/len(accuracy_scores)
 
