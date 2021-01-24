@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import numpy as np
 import os
 import scipy.io as sio
+from sklearn.decomposition import PCA
 
 def loadData(name):
     data_path = os.path.join(os.getcwd(),'data')
