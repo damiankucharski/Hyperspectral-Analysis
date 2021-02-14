@@ -1,3 +1,5 @@
+import torch
+
 class ModelSimple(torch.nn.Module):
 
   def __init__(self):
